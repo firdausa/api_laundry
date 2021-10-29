@@ -74,4 +74,30 @@ class OutletController extends Controller
             ]);
         }
     }
+
+    public function getAll($limit = NULL, $offset = NULL)
+    {
+        $data["count"] = Outlet::count();
+        
+        if($limit == NULL && $offset == NULL){
+            $data["outlet"] = Outlet::get();
+        } else {
+            $data["outlet"] = Outlet::take($limit)->skip($offset)->get();
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $data
+        ]);
+    }
+
+    public function getById($id)
+    {   
+        $data["outlet"] = Outlet::where('id_outlet', $id)->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $data
+        ]);
+    }
 }
