@@ -75,15 +75,10 @@ class OutletController extends Controller
         }
     }
 
-    public function getAll($limit = NULL, $offset = NULL)
+    public function getAll()
     {
         $data["count"] = Outlet::count();
-        
-        if($limit == NULL && $offset == NULL){
-            $data["outlet"] = Outlet::get();
-        } else {
-            $data["outlet"] = Outlet::take($limit)->skip($offset)->get();
-        }
+        $data["outlet"] = Outlet::get();
 
         return response()->json([
             'success' => true,
