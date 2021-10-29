@@ -34,4 +34,44 @@ class OutletController extends Controller
             'data' => $data
         ]);
     }
+
+    public function update(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+			'nama_outlet' => 'required|string'
+		]);
+
+		if($validator->fails()){
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors(),
+            ]);
+		}
+
+		$user = Outlet::where('id_outlet', $id)->first();
+		$user->nama_outlet = $request->nama_outlet;
+		$user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data outlet berhasil diubah!.'
+        ]);
+    }
+
+    public function delete($id)
+    {
+        $delete = Outlet::where('id_outlet', $id)->delete();
+
+        if($delete){
+            return response()->json([
+                'success' => true,
+                'message' => 'Data outlet berhasil dihapus!.'
+            ]);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data outlet gagal dihapus!.'
+            ]);
+        }
+    }
 }
