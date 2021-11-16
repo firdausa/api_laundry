@@ -42,7 +42,6 @@ class TransaksiController extends Controller
 		$transaksi->save();
 
         //insert detail transaksi
-        //var_dump($request->detail[1]['id_paket']);
         for($i = 0; $i < count($request->detail); $i++){
             $detail_transaksi = new DetailTransaksi();
             $detail_transaksi->id_transaksi = $transaksi->id_transaksi;
