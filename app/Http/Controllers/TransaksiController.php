@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 //--yang perlu ditambahkan
 use Illuminate\Support\Facades\Validator;
 use App\Models\Transaksi;
+use App\Models\DetailTransaksi;
 //--
 
 class TransaksiController extends Controller
@@ -40,7 +41,18 @@ class TransaksiController extends Controller
         $transaksi->id_user = $request->id_user;
 		$transaksi->save();
 
+        //insert detail transaksi
+        //var_dump($request->detail[1]['id_paket']);
+        for($i = 0; $i < count($request->detail); $i++){
+            $detail_transaksi = new DetailTransaksi();
+            $detail_transaksi->id_transaksi = $transaksi->id_transaksi;
+            $detail_transaksi->id_paket = $request->detail[$i]['id_paket'];
+            $detail_transaksi->berat = $request->detail[$i]['berat'];
+            $detail_transaksi->save();
+        }
+
         $data = Transaksi::where('id_transaksi','=', $transaksi->id_transaksi)->first();
+
         return response()->json([
             'success' => true,
             'message' => 'Data transaksi berhasil ditambahkan!.',
