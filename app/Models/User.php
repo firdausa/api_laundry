@@ -30,6 +30,10 @@ class User extends Authenticatable implements JWTSubject
     protected $table = "users";
     protected $primaryKey = "id";
 
+    public function outlet() {
+        return $this->belongsTo('App\Models\Outlet','id_outlet','id_outlet');
+    }
+
     public function getJWTIdentifier()
     {
         return $this->getKey();

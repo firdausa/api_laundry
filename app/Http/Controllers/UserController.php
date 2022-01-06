@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use JWTAuth;
+use DB;
 use Tymon\JWTAuth\Exceptions\JWTException;
 
 class UserController extends Controller
@@ -14,10 +15,11 @@ class UserController extends Controller
     public function insert(Request $request)
 	{
 		$validator = Validator::make($request->all(), [
-			'id_outlet' => 'required|string|max:20',
+			'id_outlet' => 'required|max:20',
 			'nama' => 'required|string|max:255',
 			'username' => 'required|string|max:50|unique:Users',
 			'password' => 'required|string|min:6',
+			'role' => 'required|string',
 		]);
 
 		if($validator->fails()){
@@ -118,103 +120,75 @@ class UserController extends Controller
         }
     }
 
-    // public function insert(Request $request)
-    // {
-    //     $validator = Validator::make($request->all(), [
-	// 		'nama' => 'required|string',
-	// 		'alamat' => 'required|string',
-	// 		'jenis_kelamin' => 'required|string',
-	// 		'tlp' => 'required|numeric'
-	// 	]);
+    public function update(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+			'id_outlet' => 'required|numeric',
+			'nama' => 'required|string|max:255',
+			'role' => 'required|string',
+		]);
 
-	// 	if($validator->fails()){
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => $validator->errors(),
-    //         ]);
-	// 	}
+		if($validator->fails()){
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors(),
+            ]);
+		}
 
-	// 	$user = new User();
-	// 	$user->nama = $request->nama;
-	// 	$user->alamat = $request->alamat;
-	// 	$user->jenis_kelamin = $request->jenis_kelamin;
-	// 	$user->tlp = $request->tlp;
-	// 	$user->save();
+		$user = User::where('id', $id)->first();
+		$user->id_outlet= $request->id_outlet;
+		$user->nama 	= $request->nama;
+		$user->username = $request->username;
+		$user->role 	= $request->role;
+        if($request->password != NULL){
+            $user->password = Hash::make($request->password);
+        }
+		
+		$user->save();
 
-    //     $data = Member::where('id_user','=', $user->id_user)->first();
-    //     return response()->json([
-    //         'success' => true,
-    //         'message' => 'Data user berhasil ditambahkan!.',
-    //         'data' => $data
-    //     ]);
-    // }
+        return response()->json([
+            'success' => true,
+            'message' => 'Data user berhasil diubah!.'
+        ]);
+    }
 
-    // public function update(Request $request, $id)
-    // {
-    //     $validator = Validator::make($request->all(), [
-	// 		'nama' => 'required|string',
-	// 		'alamat' => 'required|string',
-	// 		'jenis_kelamin' => 'required|string',
-	// 		'tlp' => 'required|numeric'
-	// 	]);
+    public function delete($id)
+    {
+        $delete = User::where('id', $id)->delete();
 
-	// 	if($validator->fails()){
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => $validator->errors(),
-    //         ]);
-	// 	}
+        if($delete){
+            return response()->json([
+                'success' => true,
+                'message' => 'Data user berhasil dihapus!.'
+            ]);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data user gagal dihapus!.'
+            ]);
+        }
+    }
 
-	// 	$user = Member::where('id_user', $id)->first();
-	// 	$user->nama = $request->nama;
-	// 	$user->alamat = $request->alamat;
-	// 	$user->jenis_kelamin = $request->jenis_kelamin;
-	// 	$user->tlp = $request->tlp;
-	// 	$user->save();
+    public function getAll()
+    {
+        $data["count"] = User::count();
+        $data['user'] = User::with('outlet')->get();
+        
+        return response()->json([
+            'success' => true,
+            'data' => $data
+        ]);
+    }
 
-    //     return response()->json([
-    //         'success' => true,
-    //         'message' => 'Data user berhasil diubah!.'
-    //     ]);
-    // }
+    public function getById($id)
+    {   
+        $data["user"] = User::where('id', $id)->get();
 
-    // public function delete($id)
-    // {
-    //     $delete = Member::where('id_user', $id)->delete();
-
-    //     if($delete){
-    //         return response()->json([
-    //             'success' => true,
-    //             'message' => 'Data user berhasil dihapus!.'
-    //         ]);
-    //     } else {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Data user gagal dihapus!.'
-    //         ]);
-    //     }
-    // }
-
-    // public function getAll()
-    // {
-    //     $data["count"] = Member::count();
-    //     $data["user"] = Member::get();
-
-    //     return response()->json([
-    //         'success' => true,
-    //         'data' => $data
-    //     ]);
-    // }
-
-    // public function getById($id)
-    // {   
-    //     $data["user"] = Member::where('id_user', $id)->get();
-
-    //     return response()->json([
-    //         'success' => true,
-    //         'data' => $data
-    //     ]);
-    // }
+        return response()->json([
+            'success' => true,
+            'data' => $data
+        ]);
+    }
 
 
 }
