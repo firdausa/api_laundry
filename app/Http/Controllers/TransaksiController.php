@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Transaksi;
 use App\Models\DetailTransaksi;
+use DB;
 //--
 
 class TransaksiController extends Controller
@@ -100,6 +101,13 @@ class TransaksiController extends Controller
 
         $transaksi = Transaksi::where('id_transaksi', $request->id_transaksi)->first();
 		$transaksi->dibayar = $request->status;
+
+        if($request->status == 'dibayar'){
+            $transaksi->tgl_bayar = date('Y-m-d H:i:s');
+        } else {
+            $transaksi->tgl_bayar = NULL;
+        }
+        
 		$transaksi->save();
 
         return response()->json([
@@ -108,4 +116,66 @@ class TransaksiController extends Controller
         ]);
 
     }
+
+    public function report(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+			'tahun' => 'required|numeric',
+		]);
+
+		if($validator->fails()){
+            return $this->response->errorResponse($validator->errors());
+		}
+
+        $query = DB::table('transaksi')
+                    ->select('transaksi.id_transaksi', 'transaksi.tgl', 'transaksi.status', 'transaksi.dibayar', 'transaksi.tgl_bayar', 'users.nama as nama_user', 'member.nama as nama_member')
+                    ->join('users', 'users.id', '=', 'transaksi.id_user')
+                    ->join('outlet', 'outlet.id_outlet', '=', 'users.id_outlet')
+                    ->join('member', 'member.id_member', '=', 'transaksi.id_member')
+                    ->whereYear('transaksi.tgl', '=', $request->tahun);
+
+        if($request->bulan != NULL){
+            $query->WhereMonth('transaksi.tgl', '=', $request->bulan);
+        }
+        if($request->tgl != NULL){
+            $query->WhereDay('transaksi.tgl', '=', $request->tgl);
+        }
+        
+        if(count($query->get()) > 0){
+            $data['status'] = true;
+            $i = 0;
+            foreach($query->get() as $list){
+                //get total transaksi
+                $get_total_transaksi = DB::table('detail_transaksi')
+                                        ->select('detail_transaksi.id_detail_transaksi', 'detail_transaksi.id_paket', 'paket.jenis', 'detail_transaksi.berat' ,DB::raw('paket.harga*detail_transaksi.berat as sub_total'))
+                                        ->join('paket', 'paket.id_paket', "=", "detail_transaksi.id_paket")
+                                        ->where('detail_transaksi.id_transaksi', '=', $list->id_transaksi)
+                                        ->get();
+                $total = 0;
+                foreach($get_total_transaksi as $sub_total){
+                    $total += $sub_total->sub_total;
+                }
+
+                $data['data'][$i]['id_transaksi'] = $list->id_transaksi;
+                $data['data'][$i]['tgl'] = $list->tgl;
+                $data['data'][$i]['status'] = $list->status;
+                $data['data'][$i]['dibayar'] = $list->dibayar;
+                $data['data'][$i]['tgl_bayar'] = $list->tgl_bayar;
+                $data['data'][$i]['kasir'] = $list->nama_user;
+                $data['data'][$i]['nama_member'] = $list->nama_member;
+                $data['data'][$i]['total'] = $total;
+                $data['data'][$i]['detail_transaksi'] = $get_total_transaksi;
+
+                $i++;
+            }
+        } else {
+            $data['status'] = false;
+            $data['data'] = NULL;
+        }
+
+        return response()->json($data);
+    }
+
+
+
 }

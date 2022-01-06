@@ -5,15 +5,18 @@ use Illuminate\Http\Request;
 
 //--yang perlu ditambahkan
 use Illuminate\Support\Facades\Validator;
-use App\Models\Outlet;
+use App\Models\Member;
 //--
 
-class OutletController extends Controller
+class MemberController extends Controller
 {
     public function insert(Request $request)
     {
         $validator = Validator::make($request->all(), [
-			'nama_outlet' => 'required|string'
+			'nama' => 'required|string',
+			'alamat' => 'required|string',
+			'jenis_kelamin' => 'required|string',
+			'tlp' => 'required|numeric'
 		]);
 
 		if($validator->fails()){
@@ -23,14 +26,17 @@ class OutletController extends Controller
             ]);
 		}
 
-		$outlet = new Outlet();
-		$outlet->nama_outlet = $request->nama_outlet;
-		$outlet->save();
+		$member = new Member();
+		$member->nama = $request->nama;
+		$member->alamat = $request->alamat;
+		$member->jenis_kelamin = $request->jenis_kelamin;
+		$member->tlp = $request->tlp;
+		$member->save();
 
-        $data = Outlet::where('id_outlet','=', $outlet->id_outlet)->first();
+        $data = Member::where('id_member','=', $member->id_member)->first();
         return response()->json([
             'success' => true,
-            'message' => 'Data outlet berhasil ditambahkan!.',
+            'message' => 'Data member berhasil ditambahkan!.',
             'data' => $data
         ]);
     }
@@ -38,7 +44,10 @@ class OutletController extends Controller
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-			'nama_outlet' => 'required|string'
+			'nama' => 'required|string',
+			'alamat' => 'required|string',
+			'jenis_kelamin' => 'required|string',
+			'tlp' => 'required|numeric'
 		]);
 
 		if($validator->fails()){
@@ -48,37 +57,40 @@ class OutletController extends Controller
             ]);
 		}
 
-		$outlet = Outlet::where('id_outlet', $id)->first();
-		$outlet->nama_outlet = $request->nama_outlet;
-		$outlet->save();
+		$member = Member::where('id_member', $id)->first();
+		$member->nama = $request->nama;
+		$member->alamat = $request->alamat;
+		$member->jenis_kelamin = $request->jenis_kelamin;
+		$member->tlp = $request->tlp;
+		$member->save();
 
         return response()->json([
             'success' => true,
-            'message' => 'Data outlet berhasil diubah!.'
+            'message' => 'Data member berhasil diubah!.'
         ]);
     }
 
     public function delete($id)
     {
-        $delete = Outlet::where('id_outlet', $id)->delete();
+        $delete = Member::where('id_member', $id)->delete();
 
         if($delete){
             return response()->json([
                 'success' => true,
-                'message' => 'Data outlet berhasil dihapus!.'
+                'message' => 'Data member berhasil dihapus!.'
             ]);
         } else {
             return response()->json([
                 'success' => false,
-                'message' => 'Data outlet gagal dihapus!.'
+                'message' => 'Data member gagal dihapus!.'
             ]);
         }
     }
 
     public function getAll()
     {
-        $data["count"] = Outlet::count();
-        $data["outlet"] = Outlet::get();
+        $data["count"] = Member::count();
+        $data["member"] = Member::get();
 
         return response()->json([
             'success' => true,
@@ -88,7 +100,7 @@ class OutletController extends Controller
 
     public function getById($id)
     {   
-        $data = Outlet::where('id_outlet', $id)->first();
+        $data["member"] = Member::where('id_member', $id)->get();
 
         return response()->json([
             'success' => true,

@@ -5,15 +5,16 @@ use Illuminate\Http\Request;
 
 //--yang perlu ditambahkan
 use Illuminate\Support\Facades\Validator;
-use App\Models\Outlet;
+use App\Models\Paket;
 //--
 
-class OutletController extends Controller
+class PaketController extends Controller
 {
     public function insert(Request $request)
     {
         $validator = Validator::make($request->all(), [
-			'nama_outlet' => 'required|string'
+			'jenis' => 'required|string',
+			'harga' => 'required|numeric'
 		]);
 
 		if($validator->fails()){
@@ -23,14 +24,15 @@ class OutletController extends Controller
             ]);
 		}
 
-		$outlet = new Outlet();
-		$outlet->nama_outlet = $request->nama_outlet;
-		$outlet->save();
+		$paket = new Paket();
+		$paket->jenis = $request->jenis;
+		$paket->harga = $request->harga;
+		$paket->save();
 
-        $data = Outlet::where('id_outlet','=', $outlet->id_outlet)->first();
+        $data = Paket::where('id_paket','=', $paket->id_paket)->first();
         return response()->json([
             'success' => true,
-            'message' => 'Data outlet berhasil ditambahkan!.',
+            'message' => 'Data paket berhasil ditambahkan!.',
             'data' => $data
         ]);
     }
@@ -38,7 +40,8 @@ class OutletController extends Controller
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-			'nama_outlet' => 'required|string'
+			'jenis' => 'required|string',
+			'harga' => 'required|numeric'
 		]);
 
 		if($validator->fails()){
@@ -48,37 +51,38 @@ class OutletController extends Controller
             ]);
 		}
 
-		$outlet = Outlet::where('id_outlet', $id)->first();
-		$outlet->nama_outlet = $request->nama_outlet;
-		$outlet->save();
+		$user = Paket::where('id_paket', $id)->first();
+		$user->jenis = $request->jenis;
+		$user->harga = $request->harga;
+		$user->save();
 
         return response()->json([
             'success' => true,
-            'message' => 'Data outlet berhasil diubah!.'
+            'message' => 'Data paket berhasil diubah!.'
         ]);
     }
 
     public function delete($id)
     {
-        $delete = Outlet::where('id_outlet', $id)->delete();
+        $delete = Paket::where('id_paket', $id)->delete();
 
         if($delete){
             return response()->json([
                 'success' => true,
-                'message' => 'Data outlet berhasil dihapus!.'
+                'message' => 'Data paket berhasil dihapus!.'
             ]);
         } else {
             return response()->json([
                 'success' => false,
-                'message' => 'Data outlet gagal dihapus!.'
+                'message' => 'Data paket gagal dihapus!.'
             ]);
         }
     }
 
     public function getAll()
     {
-        $data["count"] = Outlet::count();
-        $data["outlet"] = Outlet::get();
+        $data["count"] = Paket::count();
+        $data["paket"] = Paket::get();
 
         return response()->json([
             'success' => true,
@@ -88,7 +92,7 @@ class OutletController extends Controller
 
     public function getById($id)
     {   
-        $data = Outlet::where('id_outlet', $id)->first();
+        $data["paket"] = Paket::where('id_paket', $id)->get();
 
         return response()->json([
             'success' => true,
