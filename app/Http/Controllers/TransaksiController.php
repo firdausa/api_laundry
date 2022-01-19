@@ -82,7 +82,6 @@ class TransaksiController extends Controller
             'success' => true,
             'message' => 'Data transaksi berhasil diubah menjadi '.$request->status,
         ]);
-
     }
 
     public function update_bayar(Request $request)
@@ -119,40 +118,43 @@ class TransaksiController extends Controller
 
     public function report(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-			'tahun' => 'required|numeric',
-		]);
-
-		if($validator->fails()){
-            return $this->response->errorResponse($validator->errors());
-		}
-
         $query = DB::table('transaksi')
                     ->select('transaksi.id_transaksi', 'transaksi.tgl', 'transaksi.status', 'transaksi.dibayar', 'transaksi.tgl_bayar', 'users.nama as nama_user', 'member.nama as nama_member')
                     ->join('users', 'users.id', '=', 'transaksi.id_user')
                     ->join('outlet', 'outlet.id_outlet', '=', 'users.id_outlet')
-                    ->join('member', 'member.id_member', '=', 'transaksi.id_member')
-                    ->whereYear('transaksi.tgl', '=', $request->tahun);
+                    ->join('member', 'member.id_member', '=', 'transaksi.id_member');
 
-        if($request->bulan != NULL){
+        if($request->tahun == ""){
+            $query->whereYear('transaksi.tgl', '=', date('Y'));
+        } else {
+            $query->whereYear('transaksi.tgl', '=', $request->tahun);
+        }
+
+        if($request->bulan != ""){
             $query->WhereMonth('transaksi.tgl', '=', $request->bulan);
         }
-        if($request->tgl != NULL){
+        if($request->tgl != ""){
             $query->WhereDay('transaksi.tgl', '=', $request->tgl);
         }
         
         if(count($query->get()) > 0){
-            $data['status'] = true;
+            $data['success'] = true;
             $i = 0;
             foreach($query->get() as $list){
-                //get total transaksi
-                $get_total_transaksi = DB::table('detail_transaksi')
-                                        ->select('detail_transaksi.id_detail_transaksi', 'detail_transaksi.id_paket', 'paket.jenis', 'detail_transaksi.berat' ,DB::raw('paket.harga*detail_transaksi.berat as sub_total'))
+                //get detail transaksi
+                $get_detail_transaksi = DB::table('detail_transaksi')
+                                        ->select('detail_transaksi.id_detail_transaksi', 
+                                                 'detail_transaksi.id_paket', 
+                                                 'paket.jenis', 
+                                                 'detail_transaksi.berat' ,
+                                                 DB::raw('paket.harga * detail_transaksi.berat as sub_total')
+                                                 )
                                         ->join('paket', 'paket.id_paket', "=", "detail_transaksi.id_paket")
                                         ->where('detail_transaksi.id_transaksi', '=', $list->id_transaksi)
                                         ->get();
+                //menghitung total
                 $total = 0;
-                foreach($get_total_transaksi as $sub_total){
+                foreach($get_detail_transaksi as $sub_total){
                     $total += $sub_total->sub_total;
                 }
 
@@ -164,7 +166,7 @@ class TransaksiController extends Controller
                 $data['data'][$i]['kasir'] = $list->nama_user;
                 $data['data'][$i]['nama_member'] = $list->nama_member;
                 $data['data'][$i]['total'] = $total;
-                $data['data'][$i]['detail_transaksi'] = $get_total_transaksi;
+                $data['data'][$i]['detail_transaksi'] = $get_detail_transaksi;
 
                 $i++;
             }
